@@ -5,80 +5,80 @@ https://github.com/tamediadigital/hiring-challenges/tree/master/data-engineer-ch
 
 ## install kafka 
 
-tar -xzf kafka_2.11-0.10.0.0.tgz
+     tar -xzf kafka_2.11-0.10.0.0.tgz
 
-cd kafka_2.11-0.10.0.0 
+     cd kafka_2.11-0.10.0.0 
 
-bin/zookeeper-server-start.sh config/zookeeper.properties
+     bin/zookeeper-server-start.sh config/zookeeper.properties
 
-bin/kafka-server-start.sh config/server.properties
+     bin/kafka-server-start.sh config/server.properties
 
 ## create a topic
 
-bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic streams-file-input
+     bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic streams-file-input
 
-bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic tamedia
+     bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic tamedia
 
 ## use the kafka producer from kafka itself to send our test data to your topic
 
-cat file-input.txt | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic streams-file-input
+     cat file-input.txt | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic streams-file-input
 
-zcat stream.jsonl.gz | head -1000 | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic tamedia
+     zcat stream.jsonl.gz | head -1000 | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic tamedia
 
 ## How to compile/run
 
 exported variables:
 
-$MYSRC      (location where are my java sources)
+    $MYSRC      (location where are my java sources)
 
-$KAFKA      (location where is kafka installed - contains bin directory)
+    $KAFKA      (location where is kafka installed - contains bin directory)
 
-$JEE        (location where is unzipped J2EE)
+    $JEE        (location where is unzipped J2EE)
 
-export CP="$KAFKA/libs/*:$JEE/glassfish4/glassfish/modules/javax.json.jar"
+    export CP="$KAFKA/libs/*:$JEE/glassfish4/glassfish/modules/javax.json.jar"
 
-(for compilation only)
+    (for compilation only)
 
-export CLASSPATH=$MYSRC/sveta.jar:$JEE/glassfish4/glassfish/modules/javax.json.jar
+    export CLASSPATH=$MYSRC/sveta.jar:$JEE/glassfish4/glassfish/modules/javax.json.jar
 
-(for execution only)
+    (for execution only)
 
 create jar:
 
-cd $MYSRC
+    cd $MYSRC
 
-javac -cp $CP *.java
+    javac -cp $CP *.java
 
-jar -cvf sveta.jar *.java
+    jar -cvf sveta.jar *.java
 
 
 ## create a small app that reads this data from kafka and prints it to stdout
 
 ### send topic items to stdout
 
-bin/kafka-run-class.sh MyCAT streams-file-input
+    bin/kafka-run-class.sh MyCAT streams-file-input
 
 ### parse JSON (extract key,value)
 
-bin/kafka-run-class.sh MyJSON tamedia uid
+    bin/kafka-run-class.sh MyJSON tamedia uid
 
 
 ## find a suitable data structure for counting and implement a simple counting mechanism, output the results to stdout 
 
 ### compute cardinality of values for a given JSON key
 
-bin/kafka-run-class.sh MyCARDH tamedia uid
+    bin/kafka-run-class.sh MyCARDH tamedia uid
 
-(to be fixed, doesn't give correct result, I am not conviced abot JSON parsing, 
+    (to be fixed, doesn't give correct result, I am not conviced abot JSON parsing, 
 
-zcat ... | head -1000 | jq .uid -r | sort -u      result is 997 , my java code result is 936)  
+    zcat ... | head -1000 | jq .uid -r | sort -u      result is 997 , my java code result is 936)  
 
 
 # advanced solution
 
 ## benchmark
 
-todo
+    todo
 
 ## Output to a new Kafka Topic instead of stdout
 

@@ -41,46 +41,52 @@ Use Maven to build:
 
     run examples 
 
-
-
 ### create a small app 
 
 Reads this data from kafka and prints it to stdout, send topic items to stdout, parse JSON (extract key,value)
 
     KafkaPipe.java (explained later)
 
-
 ## find a suitable data structure for counting and implement a simple counting mechanism, output the results to stdout 
 
-    HashSet, HyperLogLog, Linear counting
-    details in doc/data_engineer_work.doc
-    
+HashSet, HyperLogLog, Linear counting, details in doc/data_engineer_work.doc
+
+
 ### compute cardinality of values for a given JSON key
 
 For demonstration purposes KafkaPipe.java can be used. The program arguments are:
-kafka_topic_name - if "stdin" it reads from stdin and don't require Kafka up and running.
-json_key_name    - set to "uid"
-method           - HASHSET or/and LOGLOG or/and LINEAR - we can provide min 1 max all 3 
+
+    kafka_topic_name - if "stdin" it reads from stdin and don't require Kafka up and running.
+
+    json_key_name    - set to "uid"
+
+    method           - HASHSET or/and LOGLOG or/and LINEAR - we can provide min 1 max all 3 
 
 USAGE:
 
     export CLASSPATH="/tmp/stream-count/*:/usr/local/kafka/kafka_2.11-0.10.0.0/libs/*
+
     bin/kafka-run-class.sh KafkaPipe kafka_topic_name json_key_name [HASHSET] [LOGLOG] [LINEAR]
 
 EXAMPLES:
 
     export CLASSPATH="/tmp/stream-count/*:/usr/local/kafka/kafka_2.11-0.10.0.0/libs/*"
+    
     cat /tmp/stream-count/streamx.jsonl | jq .uid | sort -u | wc -l 
+    
     cd /usr/local/kafka/kafka_2.11-0.10.0.0
+    
     bin/kafka-topics.sh --list --zookeeper localhost:2181
+    
     bin/kafka-topics.sh --delete --zookeeper localhost:2181 --topic test1
+    
     bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic jsonxx 
+    
     cat /tmp/stream-count/streamx.jsonl | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic jsonxx
 
     bin/kafka-run-class.sh KafkaPipe jsonxx uid LINEAR LOGLOG HASHSET
 
     cat /tmp/stream-count/streamx.jsonl | java KafkaPipe stdin uid LINEAR LOGLOG HASHSET
-
 
 # advanced solution
 
@@ -116,13 +122,15 @@ Details in doc/data_engineer_work.doc
 
 Not implemented in this version. 
 
-Based on 1 minute estimators and Json object {“ts”:<timestamp>, “range“:<range>,”ec”:<ecvalue>,”est”:<estimator>}
+Based on 1 minute estimators and Json object (estimator is serialized bitmap): 
+
+    {“ts”:<timestamp>, “range“:<range>,”ec”:<ecvalue>,”est”:<estimator>}
 
 Details in doc/data_engineer_work.doc
 
 ## only now think about the edge cases, options and other things
 
-    details in doc/data_engineer_work.doc
+Details in doc/data_engineer_work.doc
 
 
 

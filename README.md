@@ -42,15 +42,12 @@ Use Maven to build:
     run examples 
 
 
-## create a small app that reads this data from kafka and prints it to stdout
 
-### send topic items to stdout
+### create a small app 
 
-    bin/kafka-run-class.sh MyCAT streams-file-input
+Reads this data from kafka and prints it to stdout, send topic items to stdout, parse JSON (extract key,value)
 
-### parse JSON (extract key,value)
-
-    bin/kafka-run-class.sh MyJSON tamedia uid
+    KafkaPipe.java (explained later)
 
 
 ## find a suitable data structure for counting and implement a simple counting mechanism, output the results to stdout 

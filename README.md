@@ -27,29 +27,19 @@ https://github.com/tamediadigital/hiring-challenges/tree/master/data-engineer-ch
 
 ## How to compile/run
 
-exported variables:
+Use Maven to build:
 
-    $MYSRC      (location where are my java sources)
+    pom.xml contains all dependancies
 
-    $KAFKA      (location where is kafka installed - contains bin directory)
+    download this repository to local empty directory
 
-    $JEE        (location where is unzipped J2EE)
+    run "mvn package" to build
 
-    export CP="$KAFKA/libs/*:$JEE/glassfish4/glassfish/modules/javax.json.jar"
+    run "deploy.sh" to prepare for execution
 
-    (for compilation only)
+    export CLASSPATH displayed by deploy.sh, fix Kafka jar location if necessary
 
-    export CLASSPATH=$MYSRC/sveta.jar:$JEE/glassfish4/glassfish/modules/javax.json.jar
-
-    (for execution only)
-
-create jar:
-
-    cd $MYSRC
-
-    javac -cp $CP *.java
-
-    jar -cvf sveta.jar *.java
+    run examples 
 
 
 ## create a small app that reads this data from kafka and prints it to stdout
@@ -65,22 +55,47 @@ create jar:
 
 ## find a suitable data structure for counting and implement a simple counting mechanism, output the results to stdout 
 
+    HashSet, HyperLogLog, Linear counting
+    details in doc/data_engineer_work.doc
+    
 ### compute cardinality of values for a given JSON key
 
-    bin/kafka-run-class.sh MyCARDH tamedia uid
+For demonstration purposes KafkaPipe.java can be used. The program arguments are:
+kafka_topic_name - if "stdin" it reads from stdin and don't require Kafka up and running.
+json_key_name    - set to "uid"
+method           - HASHSET or/and LOGLOG or/and LINEAR - we can provide min 1 max all 3 
 
-    (to be fixed, doesn't give correct result, I am not conviced abot JSON parsing, 
+USAGE:
 
-    zcat ... | head -1000 | jq .uid -r | sort -u      result is 997 , my java code result is 936)  
+    export CLASSPATH="/tmp/stream-count/*:/usr/local/kafka/kafka_2.11-0.10.0.0/libs/*
+    bin/kafka-run-class.sh KafkaPipe kafka_topic_name json_key_name [HASHSET] [LOGLOG] [LINEAR]
+
+EXAMPLES:
+
+    export CLASSPATH="/tmp/stream-count/*:/usr/local/kafka/kafka_2.11-0.10.0.0/libs/*"
+    cat /tmp/stream-count/streamx.jsonl | jq .uid | sort -u | wc -l 
+    cd /usr/local/kafka/kafka_2.11-0.10.0.0
+    bin/kafka-topics.sh --list --zookeeper localhost:2181
+    bin/kafka-topics.sh --delete --zookeeper localhost:2181 --topic test1
+    bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic jsonxx 
+    cat /tmp/stream-count/streamx.jsonl | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic jsonxx
+
+    bin/kafka-run-class.sh KafkaPipe jsonxx uid LINEAR LOGLOG HASHSET
+
+    cat /tmp/stream-count/streamx.jsonl | java KafkaPipe stdin uid LINEAR LOGLOG HASHSET
 
 
 # advanced solution
 
 ## benchmark
 
-    todo
+Not implemented in this version. 
+
+Compare HashSet, HyperLogLog, Linear counting. Memory consumption, precision, execution duration.
 
 ## Output to a new Kafka Topic instead of stdout
+
+Not implemented in this version. 
 
 PipeDemo.java explains how to copy from one topic to another without filtering.
 
@@ -96,44 +111,21 @@ WordCountDemo.java uses KTable to filter stream and to materialize in another st
         
 ## try to measure performance and optimize
 
-Some performance issues are visible, programs done so far are a little bit dumb.
+Related to expected cardinality and proper setting of HyperLogLog or Linear counting parameter.
 
-This will bi taken into account and scalability is the right direction 
+Details in doc/data_engineer_work.doc
 
 ## write about how you could scale
 
-Very short for now, I just start thinking about that:
+Not implemented in this version. 
 
-Set up a multi broker cluster, as explained in http://kafka.apache.org/quickstart
+Based on 1 minute estimators and Json object {“ts”:<timestamp>, “range“:<range>,”ec”:<ecvalue>,”est”:<estimator>}
 
-Choose proper algorithm for cardinality 
-
-http://highscalability.com/blog/2012/4/5/big-data-counting-how-to-count-a-billion-distinct-objects-us.html
-
-(Yannik pointed to that)
-
-HashSet method - maybe that is possible, I think about KTable to use instead HashSet, 
-
-there is example WordCountDemo.java on github.com/apache/kafka. It is similar to database views :)
-
-After filtering (to investigate), it is possible to materialize that "view", e.g. to send to another topic. 
-
-Hyperloglog and Linear are right solution regarding scalability (partition work and than join), 
-
-I'll try to find some simpliest possible existing algorithm for loglog and to implement that.  
+Details in doc/data_engineer_work.doc
 
 ## only now think about the edge cases, options and other things
 
-todo
+    details in doc/data_engineer_work.doc
 
-### Current issues
-
-I use Virtual box instance of Oracle Linux 6.2 (1 cpu, 2GB ram) and it is quite old installation.
-
-I did not have time to invent something better in this moment. 
-
-Kafka fails to accept lots of input, so I tested with no more than 1000 lines from test file. 
-
-Also there are some warrning messages when I ran Java from Kafka, but result is OK. 
 
 

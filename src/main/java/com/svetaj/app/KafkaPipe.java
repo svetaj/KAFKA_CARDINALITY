@@ -39,7 +39,6 @@ import com.clearspring.analytics.stream.cardinality.HyperLogLog;
 public class KafkaPipe {
     
     private static String json_key;
-    private static String json_ts;
     private static HashSet<String> hs;
     private static HyperLogLog hl;
     private static LinearCounting lc;

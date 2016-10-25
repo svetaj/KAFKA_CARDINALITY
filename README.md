@@ -116,7 +116,7 @@ TEST ESTIMATOR GENERATION (source and destination can be topic or stdin)
     
     bin/kafka-run-class.sh DataEstimator jsonxx min_est
     
-    bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic trtmrt  --from-beginning
+    bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic min_est  --from-beginning
 
     
     cat /tmp/stream-count/streamx.jsonl | java DataEstimator jsonxx min_est

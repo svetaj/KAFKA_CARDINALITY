@@ -41,7 +41,7 @@ EXAMPLES:
   bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic min_est
   cat /tmp/stream-count/streamx.jsonl | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic jsonxx
   bin/kafka-run-class.sh DataEstimator jsonxx min_est
-  bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic trtmrt  --from-beginning
+  bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic min_est  --from-beginning
 
   cat /tmp/stream-count/streamx.jsonl | java DataEstimator jsonxx min_est
  

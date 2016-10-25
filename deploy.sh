@@ -39,10 +39,17 @@ EXAMPLES:
   ------------------------------------------------------------------------
   bin/kafka-topics.sh --delete --zookeeper localhost:2181 --topic min_est 
   bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic min_est
-  cat /tmp/stream-count/streamx.jsonl | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic jsonxx
-  bin/kafka-run-class.sh DataEstimator jsonxx min_est
-  bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic min_est  --from-beginning
+  # terminal session 1:
+  while true
+  do
+     cat /tmp/stream-count/streamx.jsonl | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic jsonxx
+     sleep 5
+  done
+  # terminal session 2:
+  bin/kafka-run-class.sh DataEstimator jsonxx min_est 12 60
+  # terminal session 3:
+  bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic min_est --from-beginning
 
-  cat /tmp/stream-count/streamx.jsonl | java DataEstimator jsonxx min_est
+  cat /tmp/stream-count/streamx.jsonl | java DataEstimator jsonxx min_est 12 60
  
 !END!

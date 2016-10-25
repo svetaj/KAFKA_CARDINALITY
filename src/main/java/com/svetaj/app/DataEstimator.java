@@ -43,8 +43,8 @@ import com.clearspring.analytics.stream.cardinality.HyperLogLog;
  * APPLIES LINEAR COUNTING ALGORITHM
  * SERIALIZE ESTIMATOR, CREATE JSON OBJECT AND WRITE TO OUTPUT STREAM
  *
- * USAGE: bin/kafka-run-class.sh KafkaTempo in_topic out_topic 
- *        java KafkaTempo stdin stdout 
+ * USAGE: bin/kafka-run-class.sh DataEstimator in_topic out_topic bytes seconds
+ *        java DataEstimator stdin stdout bytes seconds
  */
 
 public class DataEstimator {
@@ -58,6 +58,8 @@ public class DataEstimator {
     private static boolean lc_flag;
     private static int hl_par;
     private static int lc_par;
+    private static int bytes;
+    private static int seconds;
     private static boolean debug;
  
     private static String byteArrayToHex(byte[] a) {
@@ -69,7 +71,7 @@ public class DataEstimator {
 
     private static void initCounting() {
          hl_par = 10;
-         lc_par = 10;
+         lc_par = bytes;
          if (hs_flag) hs = new HashSet<String>();
          if (hl_flag) hl = new HyperLogLog(hl_par);
          if (lc_flag) lc = new LinearCounting(lc_par);
@@ -127,16 +129,11 @@ public class DataEstimator {
 
         // setting offset reset to earliest so that we can re-run the demo code with the same pre-loaded data
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        EstimatorSerializer<String> estimatorSerializer = new EstimatorSerializer<String>();
-        StringSerializer stringSerializer = new StringSerializer();
         
         TopologyBuilder builder = new TopologyBuilder();
 
         builder.addSource("Source", src_str);
         builder.addProcessor("Process", new DataEstimatorProcessorSupplier(), "Source");
-        builder.addStateStore(Stores.create("Estimators").withStringKeys().withStringValues().inMemory().build(), "Process");
-
-        //builder.addSink("Destination", dst_str, stringSerializer, estimatorSerializer, "Source");
         builder.addSink("Destination", dst_str, "Process");
 
         return new KafkaStreams(builder, props);
@@ -162,44 +159,29 @@ public class DataEstimator {
         public Processor<String, String> get() {
             return new Processor<String, String>() {
                 private ProcessorContext context;
-                private KeyValueStore<String, String> kvStore;
-                private boolean firstCall;
 
                 @Override
                 @SuppressWarnings("unchecked")
                 public void init(ProcessorContext context) {
                     this.context = context;
-                    this.context.schedule(50);
-                    this.kvStore = (KeyValueStore<String, String>) context.getStateStore("Estimators");
-                    firstCall = true;
+                    this.context.schedule(seconds*1000);
                     initCounting();
                 }
 
                 @Override
                 public void process(String dummy, String line) {
                     processCounting(line);
-                    if (debug) System.out.println("kvStore put "+ estimatorJSON());
-                    this.kvStore.delete("ESTIMATOR");
-                    this.kvStore.flush();
-                    this.kvStore.put("ESTIMATOR", estimatorJSON());
-                    this.kvStore.flush();
-                    context.commit();
                 }
 
                 @Override
                 public void punctuate(long timestamp) {
                     punctuateCounting(timestamp);
-                    if (!firstCall) {
-                        context.forward("ESTIMATOR", this.kvStore.get("ESTIMATOR"));
-                    }
-                    firstCall = false;
+                    context.forward("ESTIMATOR", estimatorJSON());
                 }
 
                 @Override
                 public void close() {
                     closeCounting();
-                    try { Thread.sleep(1000L); } catch (InterruptedException e) {}
-                    this.kvStore.close();
                 }
             };
         }
@@ -221,13 +203,15 @@ public class DataEstimator {
         KafkaStreams kafka_stream = null;
         BufferedReader br = null;
 
-        if(args.length < 2) { 
-            System.out.print("USAGE: bin/kafka-run-class.sh KafkaPipe in_topic|stdin ");
-            System.out.println("out_topic|stdout ts1 ts2\n"); 
+        if(args.length < 4) { 
+            System.out.print("USAGE: bin/kafka-run-class.sh DataEstimator "); 
+            System.out.println("in_topic|stdin out_topic|stdout bytes seconds"); 
             System.exit(1);
         }
         String src_stream = args[0];
         String dst_stream = args[1];
+        bytes =  Integer.valueOf(args[2]).intValue();
+        seconds = Integer.valueOf(args[3]).intValue();
         std_in = src_stream.equals("stdin");
         std_out = dst_stream.equals("stdout");
         json_key = "uid";
@@ -259,7 +243,7 @@ public class DataEstimator {
             System.out.println(estimatorJSON());
         }
 
-        Thread.sleep(10000L);
+        Thread.sleep(2000000L);
         if (!std_in) kafka_stream.close();
     }
 }

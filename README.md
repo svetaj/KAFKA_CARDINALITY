@@ -98,19 +98,29 @@ Compare HashSet, HyperLogLog, Linear counting. Memory consumption, precision, ex
 
 ## Output to a new Kafka Topic instead of stdout
 
-Not implemented in this version. 
+The key idea is to produce one minute estimators (serialized Linear counting bitmap):
 
-PipeDemo.java explains how to copy from one topic to another without filtering.
+![alt tag](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/estimator.jpg)
 
-        KStreamBuilder builder = new KStreamBuilder();
-        
-        builder.stream("streams-file-input").to("streams-pipe-output");
+DataEstimator.java - produces estimator from input stream (there are some thread synchronization issues)
 
-WordCountDemo.java uses KTable to filter stream and to materialize in another stream (topic) 
+EstimatorSum.java - not implemented yet
 
-        KTable<String, Long> counts = ...
-        
-        counts.to(Serdes.String(), Serdes.Long(), "streams-wordcount-output");
+TEST ESTIMATOR GENERATION (source and destination can be topic or stdin)
+
+    bin/kafka-topics.sh --delete --zookeeper localhost:2181 --topic min_est
+
+    bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic min_est
+    
+    cat /tmp/stream-count/streamx.jsonl | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic jsonxx
+    
+    bin/kafka-run-class.sh DataEstimator jsonxx min_est
+    
+    bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic min_est  --from-beginning
+
+    
+    cat /tmp/stream-count/streamx.jsonl | java DataEstimator jsonxx min_est
+
         
 ## try to measure performance and optimize
 
@@ -119,8 +129,6 @@ Related to expected cardinality and proper setting of HyperLogLog or Linear coun
 Details in doc/data_engineer_work.doc
 
 ## write about how you could scale
-
-Not implemented in this version. 
 
 Based on 1 minute estimators and Json object (estimator is serialized bitmap): 
 

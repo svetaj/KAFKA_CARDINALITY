@@ -177,6 +177,7 @@ public class DataEstimator {
                 public void punctuate(long timestamp) {
                     punctuateCounting(timestamp);
                     context.forward("ESTIMATOR", estimatorJSON());
+                    initCounting();
                 }
 
                 @Override

@@ -121,6 +121,30 @@ TEST ESTIMATOR GENERATION (source and destination can be topic or stdin)
     
     cat /tmp/stream-count/streamx.jsonl | java DataEstimator jsonxx min_est
 
+TEST ONE MINUTE GENERATION 
+
+(provide sufficient number of bytes to avoid overflow, in this example is set to 100)
+
+    # terminal session 1:
+    
+    for x in 1 10000 20000 30000 40000 50000 60000 70000 80000
+    
+    do
+    
+         zcat stream.jsonl.gz | head -$x | tail -1000 | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic jsonxx
+         
+         sleep 50
+    
+    done
+    
+    # terminal session 2:
+    
+    bin/kafka-run-class.sh DataEstimator jsonxx min_est 100 60
+    
+    # terminal session 3:
+    
+    bin/kafka-run-class.sh GetEstimator min_est
+    
         
 ## try to measure performance and optimize
 

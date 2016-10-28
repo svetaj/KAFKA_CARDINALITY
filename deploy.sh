@@ -48,8 +48,16 @@ EXAMPLES:
   # terminal session 2:
   bin/kafka-run-class.sh DataEstimator jsonxx min_est 12 60
   # terminal session 3:
-  bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic min_est --from-beginning
+  bin/kafka-run-class.sh EstimatorSum min_est hour_est 100 3600
+  # terminal session 4:
+  bin/kafka-run-class.sh GetEstimator min_est
+  # view topic stream (jsonxx, min_est, hour_est)
+  bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic TOPIC_NAME --from-beginning
 
-  cat /tmp/stream-count/streamx.jsonl | java DataEstimator jsonxx min_est 12 60
+  # stdin i stdout instead of kafka
+  cat streamx.jsonl  | java DataEstimator stdin stdout 12 60    > min_est.jsonl
+  cat min_est.jsonl  | java EstimatorSum  stdin stdout 100 3600 > hour_est.jsonl
+  cat min_est.jsonl  | java GetEstimator  stdin
+  cat hour_est.jsonl | java GetEstimator  stdin
  
 !END!

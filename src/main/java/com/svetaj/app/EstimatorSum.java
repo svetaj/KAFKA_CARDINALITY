@@ -39,15 +39,17 @@ import com.clearspring.analytics.stream.cardinality.LinearCounting;
 import com.clearspring.analytics.stream.cardinality.HyperLogLog;
 
 /**
- * COMPUTE CARDINALITY ESTIMATORS FOR JSON VALUES ASSOCIATED WITH GIVEN JSON KEY
- * APPLIES LINEAR COUNTING ALGORITHM
- * SERIALIZE ESTIMATOR, CREATE JSON OBJECT AND WRITE TO OUTPUT STREAM
+ * SUMMARIZE CARDINALITY ESTIMATORS ALREADY CREATED FOR GIVEN INTERVALS
+ * USES SIMPLE BIT ARRAY ADDITION FROM LINEAR COUNTING ALGORITHM
+ * SERIALIZE RESULTING ESTIMATOR, CREATE JSON OBJECT AND WRITE TO OUTPUT STREAM
+ * SUMMATION OF MULTIPLE TERMS REQUIRES IDENTICAL NUMBER OF BYTES IN EVERY TERM AND RESULT
+ * SUMMARIZE ALL RECORDS RECEIVED FROM INPUT STREAM, PRODUCES ONE OR MORE RESULTING RECORDS
  *
- * USAGE: bin/kafka-run-class.sh DataEstimator in_topic out_topic bytes seconds
- *        java DataEstimator stdin stdout bytes seconds
+ * USAGE: bin/kafka-run-class.sh EstimatorSum in_topic out_topic bytes seconds
+ *        java EstimatorSum stdin stdout bytes seconds
  */
 
-public class DataEstimator {
+public class EstimatorSum {
     
     private static String json_key;
     private static HashSet<String> hs;
@@ -69,6 +71,16 @@ public class DataEstimator {
        return sb.toString();
     }
 
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                                 + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
+    }
+
     private static void initCounting() {
          hl_par = 10;
          lc_par = bytes;
@@ -83,22 +95,20 @@ public class DataEstimator {
             JSONParser parser = new JSONParser();
             Object obj = parser.parse(new StringReader(line));
             JSONObject jsonObject = (JSONObject) obj;
-            String val = (String) jsonObject.get(json_key);
+            String est = (String) jsonObject.get("est");
             long ts = (Long) jsonObject.get("ts");
-            boolean added = false;
-            if (hs_flag && hs.add(val)) {
-                 if (debug) System.out.print("HASHSET="+hs.size()+" ");
-                 added = true;
-            }
-            if (hl_flag && hl.offer(val)) {
-                 if (debug) System.out.print("LOGLOG="+hl.cardinality()+" ");
-                 added = true;
-            }
-            if (lc_flag && lc.offer(val)) {
-                 if (debug) System.out.print("LINEAR="+lc.cardinality()+" ");
-                 added = true;
-            }
-            if (debug && added) System.out.println("TS="+ts+" NEW VAL="+(val+"XXXXXXXXXX").substring(0,10));
+            long range = (Long) jsonObject.get("range");
+            long ec = (Long) jsonObject.get("ec");
+            byte[] map = hexStringToByteArray(est);
+            LinearCounting[] lc_array = new LinearCounting[2];
+            lc_array[0] = lc;
+            lc_array[1] = new LinearCounting(map);
+            if (debug) System.out.println("----------------------");
+            if (debug) System.out.println("{term_1:"+byteArrayToHex(lc_array[0].getBytes())+"}");
+            if (debug) System.out.println("{term_2:"+byteArrayToHex(lc_array[1].getBytes())+"}");
+            lc = LinearCounting.mergeEstimators(lc_array);
+            if (debug) System.out.println("{result:"+byteArrayToHex (lc.getBytes())+"}");
+            if (debug) System.out.println("----------------------");
         }
         catch (IOException ex) {
             ex.printStackTrace();
@@ -109,7 +119,9 @@ public class DataEstimator {
         catch (NullPointerException ex) {
             ex.printStackTrace();
         }
-
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     private static void punctuateCounting(long timestamp) {
@@ -164,7 +176,8 @@ public class DataEstimator {
                 @SuppressWarnings("unchecked")
                 public void init(ProcessorContext context) {
                     this.context = context;
-                    this.context.schedule(seconds*1000);
+                    //this.context.schedule(seconds*1000);
+                    this.context.schedule(60*1000);
                     initCounting();
                 }
 
@@ -177,7 +190,6 @@ public class DataEstimator {
                 public void punctuate(long timestamp) {
                     punctuateCounting(timestamp);
                     context.forward("ESTIMATOR", estimatorJSON());
-                    initCounting();
                 }
 
                 @Override

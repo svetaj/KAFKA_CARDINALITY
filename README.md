@@ -143,9 +143,28 @@ TEST ONE MINUTE GENERATION
     
     # terminal session 3:
     
+    bin/kafka-run-class.sh EstimatorSum min_est hour_est 100 3600
+    
+    # terminal session 4:
+    
     bin/kafka-run-class.sh GetEstimator min_est
     
-        
+    # view topic stream (jsonxx, min_est, hour_est)
+    
+    bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic TOPIC_NAME --from-beginning
+
+
+    # stdin i stdout instead of kafka
+    
+    cat streamx.jsonl  | java DataEstimator stdin stdout 12 60    > min_est.jsonl
+    
+    cat min_est.jsonl  | java EstimatorSum  stdin stdout 100 3600 > hour_est.jsonl
+    
+    cat min_est.jsonl  | java GetEstimator  stdin
+    
+    cat hour_est.jsonl | java GetEstimator  stdin
+
+
 ## try to measure performance and optimize
 
 Related to expected cardinality and proper setting of HyperLogLog or Linear counting parameter.

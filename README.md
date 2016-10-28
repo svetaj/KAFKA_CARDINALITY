@@ -1,7 +1,6 @@
 # KAFKA_CHALLENGE 
 
-https://github.com/tamediadigital/hiring-challenges/tree/master/data-engineer-challenge
-
+[Details in doc/data_engineer_task.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_task.pdf)
 
 ## install kafka 
 
@@ -169,7 +168,7 @@ TEST ONE MINUTE GENERATION
 
 Related to expected cardinality and proper setting of HyperLogLog or Linear counting parameter.
 
-Details in doc/data_engineer_work.doc
+[Details in doc/data_engineer_work.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_work.pdf)
 
 ## write about how you could scale
 
@@ -177,11 +176,11 @@ Based on 1 minute estimators and Json object (estimator is serialized bitmap):
 
     {“ts”:<timestamp>, “range“:<range>,”ec”:<ecvalue>,”est”:<estimator>}
 
-Details in doc/data_engineer_work.doc
+[Details in doc/data_engineer_work.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_work.pdf)
 
 ## only now think about the edge cases, options and other things
 
-Details in doc/data_engineer_work.doc
+[Details in doc/data_engineer_work.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_work.pdf)
 
 
 

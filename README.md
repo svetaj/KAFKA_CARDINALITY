@@ -4,9 +4,9 @@ Count number of distinct values (cardinality) in Kafka stream for a given JSON k
 
 Algorithms used: HashSet, HyperLogLog, Linear counting
 
-[Details in doc/data_engineer_task.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_task.pdf)
+Details in [doc/data_engineer_task.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_task.pdf)
 
-## install kafka 
+## Kafka installation  
 
      tar -xzf kafka_2.11-0.10.0.0.tgz
 
@@ -16,19 +16,19 @@ Algorithms used: HashSet, HyperLogLog, Linear counting
 
      bin/kafka-server-start.sh config/server.properties
 
-## create a topic
+## Kafka topic creation
 
      bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic streams-file-input
 
      bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic tamedia
 
-## use the kafka producer from kafka itself to send our test data to your topic
+## Sending test data to Kafka topic using Kafka producer
 
      cat file-input.txt | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic streams-file-input
 
      zcat stream.jsonl.gz | head -1000 | bin/kafka-console-producer.sh --broker-list localhost:9092 --topic tamedia
 
-## How to compile/run
+## How to compile/run Java programs
 
 Use Maven to build:
 
@@ -50,12 +50,14 @@ Reads this data from kafka and prints it to stdout, send topic items to stdout, 
 
     KafkaPipe.java (explained later)
 
-## find a suitable data structure for counting and implement a simple counting mechanism, output the results to stdout 
+## Algorithms for counting distinct elements in a stream 
 
-HashSet, HyperLogLog, Linear counting, details in doc/data_engineer_work.doc
+HashSet, HyperLogLog, Linear counting
+
+Details in [big-data-counting-how-to-count-a-billion-distinct-objects](http://highscalability.com/blog/2012/4/5/big-data-counting-how-to-count-a-billion-distinct-objects-us.html)
 
 
-### compute cardinality of values for a given JSON key
+### Cardinality computation of values for a given JSON key
 
 For demonstration purposes KafkaPipe.java can be used. The program arguments are:
 
@@ -91,9 +93,7 @@ EXAMPLES:
 
     cat /tmp/stream-count/streamx.jsonl | java KafkaPipe stdin uid LINEAR LOGLOG HASHSET
 
-# advanced solution
-
-## benchmark
+## Benchmark 
 
 Not implemented in this version. 
 
@@ -167,24 +167,23 @@ TEST ONE MINUTE GENERATION
     
     cat hour_est.jsonl | java GetEstimator  stdin
 
-
-## try to measure performance and optimize
+## Performance measurement and optimization
 
 Related to expected cardinality and proper setting of HyperLogLog or Linear counting parameter.
 
-[Details in doc/data_engineer_work.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_work.pdf)
+Details in [doc/data_engineer_work.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_work.pdf)
 
-## write about how you could scale
+## Scalability
 
 Based on 1 minute estimators and Json object (estimator is serialized bitmap): 
 
     {“ts”:<timestamp>, “range“:<range>,”ec”:<ecvalue>,”est”:<estimator>}
 
-[Details in doc/data_engineer_work.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_work.pdf)
+Details in [doc/data_engineer_work.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_work.pdf)
 
-## only now think about the edge cases, options and other things
+## Edge cases, options and other things
 
-[Details in doc/data_engineer_work.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_work.pdf)
+Details in [doc/data_engineer_work.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_work.pdf)
 
 
 

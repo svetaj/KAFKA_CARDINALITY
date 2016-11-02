@@ -1,4 +1,8 @@
-# KAFKA_CHALLENGE 
+# KAFKA_CARDINALITY 
+
+Count number of distinct values (cardinality) in Kafka stream for a given JSON key. 
+
+Algorithms used: HashSet, HyperLogLog, Linear counting
 
 [Details in doc/data_engineer_task.doc](https://github.com/svetaj/KAFKA_CHALLENGE/blob/master/doc/data_engineer_task.pdf)
 
